@@ -1,0 +1,1661 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Refex Flight Search Form Field</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --blue: #1f80ff;
+      --blue-dark: #0b5ed7;
+      --orange: #ff6d1a;
+      --bg: #eef3fb;
+      --text: #172033;
+      --muted: #64748b;
+      --line: #e5eaf2;
+      --soft: #f8fafc;
+      --danger: #b91c1c;
+      --success: #15803d;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f6f8fc;
+      color: var(--text);
+    }
+
+    .component-shell {
+      height: 760px;
+      max-height: 760px;
+      min-height: 640px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #f6f8fc;
+      padding: 12px;
+      gap: 12px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .topbar {
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+
+    .component-topbar {
+      position: relative;
+      z-index: 50;
+      background: #f6f8fc;
+      padding: 0;
+      min-height: 40px;
+      flex: 0 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      background: #eaf3ff;
+      border-radius: 14px;
+    }
+
+    .policy-pill {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+    }
+
+    .search-card {
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+      padding: 18px;
+      margin-bottom: 0;
+      min-height: 0;
+      flex: 0 0 auto;
+    }
+
+    .trip-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 8px 13px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .chip.active {
+      background: #eaf3ff;
+      border-color: var(--blue);
+      color: var(--blue-dark);
+    }
+
+    .search-grid {
+      display: grid;
+      grid-template-columns: minmax(180px, 1.1fr) 48px minmax(190px, 1.15fr) minmax(150px, 0.85fr) minmax(150px, 0.85fr) minmax(150px, 0.9fr) minmax(140px, 160px);
+      gap: 0;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: visible;
+    }
+
+    .field {
+      min-height: 84px;
+      padding: 13px 14px;
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .field label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .field {
+      position: relative;
+    }
+
+    .suggestions {
+      position: absolute;
+      z-index: 200;
+      top: calc(100% - 8px);
+      left: 10px;
+      right: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 16px 32px rgba(15,23,42,0.16);
+      overflow: hidden;
+      display: none;
+    }
+
+    .suggestions.open {
+      display: block;
+    }
+
+    .suggestion {
+      width: 100%;
+      border: 0;
+      background: #fff;
+      padding: 10px 12px;
+      text-align: left;
+      cursor: pointer;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .suggestion:hover {
+      background: #f1f7ff;
+    }
+
+    .suggestion strong {
+      display: block;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .suggestion span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .selection-json {
+      background: #0f172a;
+      color: #dbeafe;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 180px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .selection-json.open {
+      display: block;
+    }
+
+    .field small {
+      display: block;
+      color: var(--muted);
+      margin-top: 5px;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .swap {
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: #f8fbff;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--blue);
+    }
+
+    .search-btn {
+      border: 0;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      color: #fff;
+      font-weight: 900;
+      font-size: 16px;
+      cursor: pointer;
+      min-width: 150px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 18px;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .results-column {
+      min-height: 0;
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #results {
+      height: var(--results-scroll-height, 360px);
+      max-height: var(--results-scroll-height, 360px);
+      min-height: 160px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 4px;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    #results::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #results::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+
+    .panel,
+    .result-card,
+    .summary-bar {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+    }
+
+    .summary-bar {
+      z-index: 40;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    .panel {
+      padding: 16px;
+      height: 100%;
+      max-height: 100%;
+      overflow-y: auto;
+    }
+
+    .panel h3 {
+      margin: 0 0 14px;
+      font-size: 16px;
+    }
+
+    .filter-section {
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .filter-section strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .check {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: #334155;
+      font-size: 13px;
+      margin: 8px 0;
+    }
+
+    .results-head {
+      background: #fff;
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex: 0 0 auto;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef6ff;
+      color: var(--blue-dark);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .route-title {
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .filter-empty {
+      color: #94a3b8;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .filter-section label.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .filter-section label.disabled input {
+      cursor: not-allowed;
+    }
+
+    .state {
+      background: #fff;
+      border-radius: 18px;
+      padding: 34px;
+      text-align: center;
+      color: var(--muted);
+      box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+    }
+
+    .result-card {
+      margin-bottom: 12px;
+      padding: 16px;
+      border: 2px solid transparent;
+    }
+
+    .result-card.selected {
+      border-color: var(--blue);
+      box-shadow: 0 12px 28px rgba(31,128,255,0.18);
+    }
+
+    .result-main {
+      display: grid;
+      grid-template-columns: 180px 1fr 135px;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .airline {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .airline img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .airline-name {
+      font-weight: 900;
+    }
+
+    .fare-type {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: 1fr 130px 1fr;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .time {
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .airport {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .route-line {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .line {
+      height: 2px;
+      background: var(--line);
+      margin: 6px 0;
+      position: relative;
+    }
+
+    .line:after {
+      content: "✈";
+      position: absolute;
+      right: -4px;
+      top: -10px;
+      color: var(--blue);
+      font-size: 15px;
+    }
+
+    .fare-box {
+      text-align: right;
+    }
+
+    .fare {
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .select-btn {
+      margin-top: 8px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--orange);
+      color: #fff;
+      padding: 9px 18px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .details-btn {
+      border: 0;
+      background: transparent;
+      color: var(--blue-dark);
+      font-weight: 800;
+      cursor: pointer;
+      padding: 10px 0 0;
+    }
+
+    .details {
+      margin-top: 14px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      display: none;
+    }
+
+    .details.open { display: block; }
+
+    .leg {
+      padding: 10px;
+      background: var(--soft);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .summary-bar {
+      position: relative;
+      left: auto;
+      transform: none;
+      bottom: auto;
+      width: 100%;
+      flex: 0 0 auto;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--line);
+    }
+
+    .submit-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-weight: 900;
+      color: #fff;
+      background: var(--blue);
+      cursor: pointer;
+    }
+
+    .submit-btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .warn {
+      color: #92400e;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .component-shell {
+        height: 720px;
+        max-height: 720px;
+        min-height: 620px;
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .page {
+        padding: 0;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .brand {
+        font-size: 18px;
+      }
+
+      .policy-pill {
+        width: 100%;
+        text-align: center;
+        border-radius: 12px;
+      }
+
+      .search-card {
+        padding: 12px;
+        border-radius: 18px;
+        margin-bottom: 0;
+      }
+
+      .trip-row {
+        gap: 8px;
+      }
+
+      .chip {
+        flex: 1;
+        text-align: center;
+      }
+
+      .search-grid {
+        grid-template-columns: 1fr;
+        border-radius: 16px;
+      }
+
+      .swap {
+        min-height: 42px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .field {
+        min-height: 74px;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .field input,
+      .field select {
+        font-size: 18px;
+      }
+
+      .suggestions {
+        position: static;
+        margin-top: 8px;
+        left: auto;
+        right: auto;
+        box-shadow: none;
+        border-radius: 12px;
+      }
+
+      .search-btn {
+        min-height: 54px;
+        min-width: 100%;
+        border-radius: 0 0 16px 16px;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        overflow: hidden;
+        min-height: 0;
+        flex: 1;
+      }
+
+      .panel {
+        display: none;
+      }
+
+      .results-head {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 12px;
+      }
+
+      .tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .tab {
+        text-align: center;
+      }
+
+      .result-card {
+        padding: 12px;
+      }
+
+      .result-main {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .timeline {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .route-line {
+        text-align: left;
+      }
+
+      .line {
+        max-width: 180px;
+      }
+
+      .fare-box {
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .select-btn {
+        min-width: 110px;
+      }
+
+      .summary-bar {
+        border-radius: 16px;
+        padding: 12px;
+      }
+
+      .selection-json {
+        max-height: 150px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .component-shell {
+        height: 700px;
+        max-height: 700px;
+        min-height: 600px;
+        padding: 8px;
+        gap: 8px;
+      }
+
+      .page {
+        padding: 0;
+      }
+
+      .brand-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 12px;
+      }
+
+      .brand {
+        font-size: 16px;
+      }
+
+      .route-title {
+        font-size: 16px;
+      }
+
+      .time {
+        font-size: 20px;
+      }
+
+      .fare {
+        font-size: 20px;
+      }
+
+      .field {
+        padding: 11px 12px;
+      }
+    }
+  
+    /* Production form-field behavior: hide selected JSON unless explicitly debugging. */
+    .selection-json,
+    .selection-json.open {
+      display: none !important;
+    }
+
+    body.debug-mode .selection-json.open {
+      display: block !important;
+    }
+
+    .kf-write-status {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .kf-write-status.ok {
+      color: #15803d;
+    }
+
+    .kf-write-status.warn {
+      color: #b45309;
+    }
+
+    .kf-write-status.error {
+      color: #b91c1c;
+    }
+
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">✈</div>
+        <div>Refex Travel Booking</div>
+      </div>
+      <div class="policy-pill">Policy: book flights 15 days before departure</div>
+    </header>
+
+    <section class="search-card" id="searchCard">
+      <div class="trip-row">
+        <button class="chip active" id="oneWayChip">One Way</button>
+        <button class="chip" id="roundTripChip">Round Trip</button>
+      </div>
+
+      <div class="search-grid">
+        <div class="field">
+          <label>FROM</label>
+          <input id="fromCity" value="Chennai" autocomplete="off" />
+          <small id="fromHint">MAA · Chennai International Airport</small>
+          <div class="suggestions" id="fromSuggestions"></div>
+        </div>
+
+        <button class="swap" id="swapBtn" title="Swap">⇄</button>
+
+        <div class="field">
+          <label>TO</label>
+          <input id="toCity" value="New Delhi" autocomplete="off" />
+          <small id="toHint">DEL · Indira Gandhi International Airport</small>
+          <div class="suggestions" id="toSuggestions"></div>
+        </div>
+
+        <div class="field">
+          <label>DEPARTURE</label>
+          <input id="depDate" type="date" value="2026-06-20" />
+          <small>Travel date</small>
+        </div>
+
+        <div class="field" id="returnField">
+          <label>RETURN</label>
+          <input id="arrDate" type="date" value="2026-06-25" />
+          <small id="returnHint">Only for round trip</small>
+        </div>
+
+        <div class="field">
+          <label>PASSENGER & CLASS</label>
+          <select id="fareClass">
+            <option>Economy</option>
+            <option>PremiumEconomy</option>
+            <option>Business</option>
+            <option>First</option>
+          </select>
+          <small>1 Adult</small>
+        </div>
+
+        <button class="search-btn" id="searchBtn">SEARCH</button>
+      </div>
+
+      <div class="warn" id="policyInfo">Policy insight will compare request timing against the 15-day advance booking rule.</div>
+    </section>
+
+    <section class="content-grid">
+      <aside class="panel">
+        <h3>Filters</h3>
+
+        <div class="filter-section">
+          <strong>Stops</strong>
+          <div id="stopFilters">
+            <div class="hint">Search flights to load stop filters.</div>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <strong>Refundability</strong>
+          <div id="refundabilityFilters">
+            <div class="hint">Search flights to load refundability filters.</div>
+          </div>
+        </div>
+
+        <div class="filter-section">
+          <strong>Airlines</strong>
+          <div id="airlineFilters">
+            <div class="hint">Search flights to load airline filters.</div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="results-column">
+        <div class="results-head" id="resultsHead">
+          <div>
+            <div class="route-title" id="routeTitle">MAA → DEL</div>
+            <div class="hint" id="resultHint">Search flights to view available options.</div>
+          </div>
+          <div class="tabs">
+            <button class="tab active-tab" type="button" id="individualFlightsTab">Individual Flights</button>
+            <button class="tab" type="button" id="lowestFareTab">Lowest Fare First</button>
+          </div>
+        </div>
+
+        <div id="results">
+          <div class="state">Search flights to view available options.</div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <section class="summary-bar" id="summaryBar">
+    <div style="width: 100%;">
+      <strong id="summaryTitle">No flight selected</strong>
+      <div class="hint" id="summaryText">Select a flight option to write flight JSON back to the Kissflow form field.</div>
+      <pre class="selection-json" id="selectionJson"></pre>
+      <div class="kf-write-status warn" id="kfWriteStatus">Preview mode. In Kissflow, selection will be written to this custom form field.</div>
+    </div>
+  </section>
+  </div>
+
+  <script>
+
+    const DEBUG_MODE = new URLSearchParams(window.location.search).get("debug") === "1";
+    if (DEBUG_MODE) {
+      document.body.classList.add("debug-mode");
+    }
+
+    const IS_LOCAL_PREVIEW = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+
+    // Local preview:
+    // - Airport autocomplete uses local Express route because it reads local public/data/airports.json.
+    // - Flight search uses deployed Cloud Run to avoid local GCP Secret Manager auth issues.
+    const AIRPORT_API_BASE = "";
+    const FLIGHT_API_BASE = IS_LOCAL_PREVIEW
+      ? "https://refex-tms-flightsearch-dhwffeu7pq-el.a.run.app"
+      : "";
+
+    let tripType = "oneWay";
+    let selectedFlight = null;
+    let expandedId = null;
+    let sortMode = "individual";
+    window.currentOptions = window.currentOptions || [];
+    let activeFilters = {
+      stops: new Set(),
+      refundability: new Set(),
+      airlines: new Set()
+    };
+
+    let selectedFromAirport = {
+      code: "MAA",
+      city: "Chennai",
+      name: "Chennai International Airport",
+      country: "IN",
+      display: "Chennai, IN - MAA"
+    };
+
+    let selectedToAirport = {
+      code: "DEL",
+      city: "New Delhi",
+      name: "Indira Gandhi International Airport",
+      country: "IN",
+      display: "New Delhi, IN - DEL"
+    };
+
+    let lastFromInputValue = "Chennai";
+    let lastToInputValue = "New Delhi";
+
+    const oneWayChip = document.getElementById("oneWayChip");
+    const roundTripChip = document.getElementById("roundTripChip");
+    const returnField = document.getElementById("returnField");
+    const searchBtn = document.getElementById("searchBtn");
+    const results = document.getElementById("results");
+    const routeTitle = document.getElementById("routeTitle");
+    const resultHint = document.getElementById("resultHint");
+    const summaryTitle = document.getElementById("summaryTitle");
+    const summaryText = document.getElementById("summaryText");
+    const selectionJson = document.getElementById("selectionJson");
+    const kfWriteStatus = document.getElementById("kfWriteStatus");
+    const fromInput = document.getElementById("fromCity");
+    const toInput = document.getElementById("toCity");
+    const fromHint = document.getElementById("fromHint");
+    const toHint = document.getElementById("toHint");
+    const fromSuggestions = document.getElementById("fromSuggestions");
+    const toSuggestions = document.getElementById("toSuggestions");
+    const componentShell = document.querySelector(".component-shell");
+    const componentTopbar = document.getElementById("componentTopbar");
+    const searchCard = document.getElementById("searchCard");
+    const resultsHead = document.getElementById("resultsHead");
+    const summaryBar = document.getElementById("summaryBar");
+    const stopFilters = document.getElementById("stopFilters");
+    const refundabilityFilters = document.getElementById("refundabilityFilters");
+    const airlineFilters = document.getElementById("airlineFilters");
+    const individualFlightsTab = document.getElementById("individualFlightsTab");
+    const lowestFareTab = document.getElementById("lowestFareTab");
+
+    function forceResultsScrollHeight() {
+      if (!componentShell || !results || !componentTopbar || !searchCard || !resultsHead || !summaryBar) {
+        return;
+      }
+
+      const shellHeight = componentShell.clientHeight || 760;
+      const shellStyles = window.getComputedStyle(componentShell);
+      const gap = parseFloat(shellStyles.rowGap || shellStyles.gap || "12") || 12;
+
+      const usedHeight =
+        componentTopbar.offsetHeight +
+        searchCard.offsetHeight +
+        resultsHead.offsetHeight +
+        summaryBar.offsetHeight +
+        (gap * 3) +
+        12;
+
+      const available = Math.max(180, shellHeight - usedHeight);
+
+      results.style.setProperty("--results-scroll-height", `${available}px`);
+    }
+
+    window.addEventListener("resize", forceResultsScrollHeight);
+
+    function setTripType(value) {
+      tripType = value;
+      oneWayChip.classList.toggle("active", value === "oneWay");
+      roundTripChip.classList.toggle("active", value === "roundTrip");
+      returnField.style.opacity = value === "roundTrip" ? "1" : "0.45";
+    }
+
+    oneWayChip.onclick = () => setTripType("oneWay");
+    roundTripChip.onclick = () => setTripType("roundTrip");
+
+    function renderAirportSelections() {
+      fromInput.value = selectedFromAirport ? (selectedFromAirport.city || selectedFromAirport.code) : fromInput.value;
+      toInput.value = selectedToAirport ? (selectedToAirport.city || selectedToAirport.code) : toInput.value;
+
+      lastFromInputValue = fromInput.value;
+      lastToInputValue = toInput.value;
+
+      fromHint.textContent = selectedFromAirport
+        ? `${selectedFromAirport.code} · ${selectedFromAirport.name || ""}`
+        : "Select an airport from suggestions";
+
+      toHint.textContent = selectedToAirport
+        ? `${selectedToAirport.code} · ${selectedToAirport.name || ""}`
+        : "Select an airport from suggestions";
+    }
+
+    document.getElementById("swapBtn").onclick = () => {
+      if (!selectedFromAirport || !selectedToAirport) {
+        alert("Select valid From and To airports before swapping.");
+        return;
+      }
+
+      const temp = selectedFromAirport;
+      selectedFromAirport = selectedToAirport;
+      selectedToAirport = temp;
+      renderAirportSelections();
+    };
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0
+      }).format(Number(value || 0));
+    }
+
+    function buildPayload() {
+      const payload = {
+        tripType,
+        isInternational: selectedFromAirport?.country !== selectedToAirport?.country,
+        fareClass: document.getElementById("fareClass").value,
+        fromCity: selectedFromAirport?.code,
+        toCity: selectedToAirport?.code,
+        depDate: document.getElementById("depDate").value,
+        noOfAdults: 1,
+        noOfChildren: 0,
+        noOfInfant: 0
+      };
+
+      if (tripType === "roundTrip") {
+        payload.arrDate = document.getElementById("arrDate").value;
+      }
+
+      return payload;
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function isNonRefundable(option) {
+      const value = normalizeText(option.refundable);
+      return value.includes("non refundable") || value.includes("non-refundable") || value === "nonrefundable";
+    }
+
+    function isRefundable(option) {
+      const value = normalizeText(option.refundable);
+      return value.includes("refundable") && !isNonRefundable(option);
+    }
+
+    function getFilteredAndSortedOptions() {
+      const canonicalOptions = Array.isArray(window.currentOptions) ? window.currentOptions : [];
+      let filtered = [...canonicalOptions];
+
+      if (activeFilters.stops.size) {
+        filtered = filtered.filter((option) => {
+          const stops = Number(option.stops || 0);
+          return (
+            (activeFilters.stops.has("0") && stops === 0) ||
+            (activeFilters.stops.has("1") && stops === 1) ||
+            (activeFilters.stops.has("2plus") && stops >= 2)
+          );
+        });
+      }
+
+      if (activeFilters.refundability.size) {
+        filtered = filtered.filter((option) => {
+          return (
+            (activeFilters.refundability.has("refundable") && isRefundable(option)) ||
+            (activeFilters.refundability.has("nonRefundable") && isNonRefundable(option))
+          );
+        });
+      }
+
+      if (activeFilters.airlines.size) {
+        filtered = filtered.filter((option) => {
+          const airlineName = normalizeText(option.airlineName);
+          const airlineCode = normalizeText(option.airlineCode);
+          return [...activeFilters.airlines].some((airline) => airlineName === airline || airlineCode === airline);
+        });
+      }
+
+      if (sortMode === "lowestFare") {
+        filtered.sort((a, b) => Number(a.totalFare || 0) - Number(b.totalFare || 0));
+      } else {
+        filtered.sort((a, b) => Number(a.__providerOrder || 0) - Number(b.__providerOrder || 0));
+      }
+
+      return filtered;
+    }
+
+    function applyFiltersAndRender() {
+      const visibleOptions = getFilteredAndSortedOptions();
+
+      const stillVisible = selectedFlight && visibleOptions.some((option) => option.id === selectedFlight.flight?.id);
+      if (selectedFlight && !stillVisible) {
+        selectedFlight = null;
+        selectionJson.classList.remove("open");
+        selectionJson.textContent = "";
+        summaryTitle.textContent = "No flight selected";
+        summaryText.textContent = "Selected flight is hidden by current filters.";
+      }
+
+      renderOptions(visibleOptions);
+
+      const shownText = visibleOptions.length === (window.currentOptions || []).length
+        ? `${visibleOptions.length} options shown`
+        : `${visibleOptions.length} of ${(window.currentOptions || []).length} options shown`;
+
+      resultHint.textContent = `${shownText} · INR · ${sortMode === "lowestFare" ? "lowest fare first" : "individual flights"}`;
+
+      forceResultsScrollHeight();
+    }
+
+    function renderStopFilters(options) {
+      const counts = {
+        "0": options.filter((option) => Number(option.stops || 0) === 0).length,
+        "1": options.filter((option) => Number(option.stops || 0) === 1).length,
+        "2plus": options.filter((option) => Number(option.stops || 0) >= 2).length
+      };
+
+      const rows = [
+        { value: "0", label: "Non-stop", count: counts["0"] },
+        { value: "1", label: "1 Stop", count: counts["1"] },
+        { value: "2plus", label: "2+ Stops", count: counts["2plus"] }
+      ].filter((row) => row.count > 0);
+
+      if (!rows.length) {
+        stopFilters.innerHTML = '<div class="filter-empty">No stop filter options available.</div>';
+        return;
+      }
+
+      stopFilters.innerHTML = rows.map((row) => `
+        <label>
+          <input type="checkbox" class="filter-input" data-filter-type="stop" value="${row.value}" />
+          ${row.label} <span class="hint">(${row.count})</span>
+        </label>
+      `).join("");
+
+      stopFilters.querySelectorAll(".filter-input").forEach((input) => {
+        input.addEventListener("change", handleFilterChange);
+      });
+    }
+
+    function renderRefundabilityFilters(options) {
+      const refundableCount = options.filter(isRefundable).length;
+      const nonRefundableCount = options.filter(isNonRefundable).length;
+
+      const rows = [
+        { value: "refundable", label: "Refundable / Partially refundable", count: refundableCount },
+        { value: "nonRefundable", label: "Non-refundable", count: nonRefundableCount }
+      ].filter((row) => row.count > 0);
+
+      if (!rows.length) {
+        refundabilityFilters.innerHTML = '<div class="filter-empty">Refundability split unavailable from provider.</div>';
+        return;
+      }
+
+      refundabilityFilters.innerHTML = rows.map((row) => `
+        <label>
+          <input type="checkbox" class="filter-input" data-filter-type="refundability" value="${row.value}" />
+          ${row.label} <span class="hint">(${row.count})</span>
+        </label>
+      `).join("");
+
+      refundabilityFilters.querySelectorAll(".filter-input").forEach((input) => {
+        input.addEventListener("change", handleFilterChange);
+      });
+    }
+
+    function renderAirlineFilters(options) {
+      const airlineMap = new Map();
+
+      options.forEach((option) => {
+        const name = option.airlineName || option.provider || option.airlineCode || "Unknown Airline";
+        const code = option.airlineCode || name;
+        const key = normalizeText(name);
+        if (!airlineMap.has(key)) {
+          airlineMap.set(key, { name, code, count: 0 });
+        }
+        airlineMap.get(key).count += 1;
+      });
+
+      const airlines = [...airlineMap.values()].sort((a, b) => a.name.localeCompare(b.name));
+
+      if (!airlines.length) {
+        airlineFilters.innerHTML = '<div class="filter-empty">No airline data returned.</div>';
+        return;
+      }
+
+      if (airlines.length === 1) {
+        airlineFilters.innerHTML = `<div class="filter-empty">Only ${airlines[0].name} returned by Trexedia UAT for this route/date. Airline filtering is not applicable.</div>`;
+        return;
+      }
+
+      airlineFilters.innerHTML = airlines.map((airline) => `
+        <label>
+          <input type="checkbox" class="filter-input" data-filter-type="airline" value="${normalizeText(airline.name)}" />
+          ${airline.name} <span class="hint">(${airline.count})</span>
+        </label>
+      `).join("");
+
+      airlineFilters.querySelectorAll(".filter-input").forEach((input) => {
+        input.addEventListener("change", handleFilterChange);
+      });
+    }
+
+    function handleFilterChange(event) {
+      const input = event.target;
+      const filterType = input.dataset.filterType;
+      const value = input.value;
+
+      if (filterType === "stop") {
+        input.checked ? activeFilters.stops.add(value) : activeFilters.stops.delete(value);
+      }
+
+      if (filterType === "refundability") {
+        input.checked ? activeFilters.refundability.add(value) : activeFilters.refundability.delete(value);
+      }
+
+      if (filterType === "airline") {
+        input.checked ? activeFilters.airlines.add(value) : activeFilters.airlines.delete(value);
+      }
+
+      applyFiltersAndRender();
+    }
+
+    function renderOptions(options) {
+      if (!options.length) {
+        results.innerHTML = '<div class="state">No live fares returned for this route/date from Trexedia. Try another airport, date, or route.</div>';
+        return;
+      }
+
+      results.innerHTML = options.map((o) => {
+        const isSelected = selectedFlight && selectedFlight.id === o.id;
+        const isExpanded = expandedId === o.id;
+        const stopText = Number(o.stops || 0) === 0 ? "Non-stop" : `${o.stops} stop`;
+        const legs = (o.legSummary || []).map((leg) => `
+          <div class="leg">
+            <strong>${leg.flightName || o.airlineName} ${leg.flightCode || ""}-${leg.flightNumber || ""}</strong><br />
+            ${leg.from} ${leg.departureTime} → ${leg.to} ${leg.arrivalTime} · ${leg.duration || ""}
+            ${leg.layoverTime ? `<br />Layover after this leg: ${leg.layoverTime}` : ""}
+          </div>
+        `).join("");
+
+        return `
+          <article class="result-card ${isSelected ? "selected" : ""}">
+            <div class="result-main">
+              <div class="airline">
+                <img src="${o.flightImage || ""}" alt="" onerror="this.style.display='none'" />
+                <div>
+                  <div class="airline-name">${o.airlineName || o.provider || "Airline"}</div>
+                  <div class="fare-type">${o.fareType || "Fare"} · ${o.refundable || "Policy unavailable"}</div>
+                </div>
+              </div>
+
+              <div class="timeline">
+                <div>
+                  <div class="time">${o.departureTime || "--:--"}</div>
+                  <div class="airport">${o.sourceCityCode} · ${o.departureAirport || ""}</div>
+                </div>
+                <div class="route-line">
+                  <div>${o.duration || ""}</div>
+                  <div class="line"></div>
+                  <div>${stopText}</div>
+                </div>
+                <div>
+                  <div class="time">${o.arrivalTime || "--:--"}</div>
+                  <div class="airport">${o.destinationCityCode} · ${o.arrivalAirport || ""}</div>
+                </div>
+              </div>
+
+              <div class="fare-box">
+                <div class="fare">${formatMoney(o.totalFare)}</div>
+                <button class="select-btn" onclick='selectFlight(${JSON.stringify(o).replaceAll("'", "&apos;")})'>
+                  ${isSelected ? "Selected" : "Select"}
+                </button>
+              </div>
+            </div>
+
+            <button class="details-btn" onclick="toggleDetails('${o.id}')">
+              ${isExpanded ? "Hide Details" : "View Flight Details"}
+            </button>
+
+            <div class="details ${isExpanded ? "open" : ""}">
+              ${legs}
+              <div class="hint">Baggage: ${o.baggage || "Available during fare rules check"} · Seats: ${o.seatsAvailable || "NA"}</div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+
+    function isInsideKissflowFormField() {
+      return Boolean(
+        window.kf &&
+        window.kf.field &&
+        window.kf.field.actions &&
+        typeof window.kf.field.actions.updateValue === "function"
+      );
+    }
+
+    function cleanAirport(airport) {
+      if (!airport) return null;
+
+      return {
+        code: airport.code || "",
+        city: airport.city || "",
+        name: airport.name || "",
+        country: airport.country || "",
+        display: airport.display || ""
+      };
+    }
+
+    function cleanFlight(option) {
+      if (!option) return null;
+
+      return {
+        id: option.id,
+        uuid: option.uuid,
+        tripType: option.tripType,
+        currencyCode: option.currencyCode || "INR",
+        sectorIndex: option.sectorIndex,
+        fareType: option.fareType,
+        fareKey: option.fareKey,
+        provider: option.provider,
+        airlineName: option.airlineName,
+        airlineCode: option.airlineCode,
+        flightNumber: String(option.flightNumber || "").trim(),
+        flightImage: option.flightImage,
+        sourceCityCode: option.sourceCityCode,
+        sourceCityName: option.sourceCityName,
+        destinationCityCode: option.destinationCityCode,
+        destinationCityName: option.destinationCityName,
+        departureAirport: option.departureAirport,
+        arrivalAirport: option.arrivalAirport,
+        departureDate: option.departureDate,
+        arrivalDate: option.arrivalDate,
+        departureTime: option.departureTime,
+        arrivalTime: option.arrivalTime,
+        duration: option.duration,
+        stops: Number(option.stops || 0),
+        seatsAvailable: option.seatsAvailable,
+        refundable: option.refundable,
+        baseRate: option.baseRate,
+        tax: option.tax,
+        totalFare: Number(option.totalFare || 0),
+        baggage: option.baggage,
+        legSummary: Array.isArray(option.legSummary) ? option.legSummary : []
+      };
+    }
+
+    function buildComponentValue(option) {
+      const fromAirport = cleanAirport(selectedFromAirport);
+      const toAirport = cleanAirport(selectedToAirport);
+      const flight = cleanFlight(option);
+
+      return {
+        component: "refex-tms-flight-search",
+        version: "0.1.0",
+        selectedAt: new Date().toISOString(),
+        bookingAmount: flight?.totalFare || 0,
+        bookingAmountFieldId: "Booking_Amount_1",
+        currencyCode: flight?.currencyCode || "INR",
+        route: {
+          from: fromAirport,
+          to: toAirport,
+          isInternational: fromAirport?.country !== toAirport?.country
+        },
+        flight,
+        policy: {
+          advanceBookingDays: 15,
+          timezone: "Asia/Kolkata"
+        }
+      };
+    }
+
+    async function writeSelectionToKissflowField(componentValue) {
+      window.__REFEX_SELECTED_FLIGHT__ = componentValue;
+
+      if (!isInsideKissflowFormField()) {
+        if (kfWriteStatus) {
+          kfWriteStatus.className = "kf-write-status warn";
+          kfWriteStatus.textContent = "Preview mode. In Kissflow, selected flight payload will be written to this custom form field.";
+        }
+        return;
+      }
+
+      try {
+        await window.kf.field.actions.updateValue(componentValue);
+
+        if (kfWriteStatus) {
+          kfWriteStatus.className = "kf-write-status ok";
+          kfWriteStatus.textContent = `Selected flight saved. Booking amount: ₹${Number(componentValue.bookingAmount || 0).toLocaleString("en-IN")}`;
+        }
+      } catch (error) {
+        if (kfWriteStatus) {
+          kfWriteStatus.className = "kf-write-status error";
+          kfWriteStatus.textContent = `Could not save selected flight to Kissflow field: ${error?.message || error}`;
+        }
+      }
+    }
+
+    window.toggleDetails = function(id) {
+      expandedId = expandedId === id ? null : id;
+      applyFiltersAndRender();
+    };
+
+    window.selectFlight = function(option) {
+      const componentValue = buildComponentValue(option);
+
+      selectedFlight = {
+        id: option.id,
+        selectedAt: componentValue.selectedAt,
+        bookingAmount: componentValue.bookingAmount,
+        bookingAmountFieldId: componentValue.bookingAmountFieldId,
+        fromAirport: componentValue.route.from,
+        toAirport: componentValue.route.to,
+        flight: componentValue.flight
+      };
+
+      summaryTitle.textContent = `${componentValue.flight.airlineName} ${componentValue.flight.flightNumber} · ${formatMoney(componentValue.bookingAmount)}`;
+      summaryText.textContent = `${componentValue.flight.sourceCityCode} ${componentValue.flight.departureTime} → ${componentValue.flight.destinationCityCode} ${componentValue.flight.arrivalTime} · ${componentValue.flight.duration} · ${componentValue.flight.fareType}`;
+
+      selectionJson.textContent = JSON.stringify(componentValue, null, 2);
+
+      if (typeof DEBUG_MODE !== "undefined" && DEBUG_MODE) {
+        selectionJson.classList.add("open");
+      } else {
+        selectionJson.classList.remove("open");
+      }
+
+      writeSelectionToKissflowField(componentValue);
+
+      window.dispatchEvent(new CustomEvent("refex:flight-selected", { detail: componentValue }));
+
+      applyFiltersAndRender();
+    };
+
+    searchBtn.onclick = async () => {
+      if (!selectedFromAirport || !selectedToAirport) {
+        results.innerHTML = '<div class="state" style="color: var(--danger)">Please select valid From and To airports from the suggestions.</div>';
+        resultHint.textContent = "Airport selection required";
+        return;
+      }
+
+      const payload = buildPayload();
+      routeTitle.textContent = `${selectedFromAirport.city || payload.fromCity} → ${selectedToAirport.city || payload.toCity}`;
+      resultHint.textContent = "Searching live fares from Trexedia...";
+      results.innerHTML = '<div class="state">Searching flights...</div>';
+      selectedFlight = null;
+      selectionJson.classList.remove("open");
+      selectionJson.textContent = "";
+      summaryTitle.textContent = "No flight selected";
+      summaryText.textContent = "Select a flight option to write flight JSON back to the Kissflow form field.";
+
+      try {
+        const response = await fetch(`${FLIGHT_API_BASE}/api/flights/search`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || "Flight search failed");
+        }
+
+        const result = data.result || {};
+        const options = (result.options || []).map((option, index) => ({
+          ...option,
+          __providerOrder: index
+        }));
+
+        window.currentOptions = options;
+
+        activeFilters = {
+          stops: new Set(),
+          refundability: new Set(),
+          airlines: new Set()
+        };
+
+        renderStopFilters(options);
+        renderRefundabilityFilters(options);
+        renderAirlineFilters(options);
+
+        sortMode = "individual";
+        individualFlightsTab.classList.add("active-tab");
+        lowestFareTab.classList.remove("active-tab");
+
+        applyFiltersAndRender();
+      } catch (error) {
+        resultHint.textContent = "Search failed";
+        results.innerHTML = `<div class="state" style="color: var(--danger)">Search failed: ${error.message}</div>`;
+      }
+    };
+
+    async function searchAirportSuggestions(term, target) {
+      const suggestionsEl = target === "from" ? fromSuggestions : toSuggestions;
+
+      if (!term || term.trim().length < 2) {
+        suggestionsEl.classList.remove("open");
+        suggestionsEl.innerHTML = "";
+        return;
+      }
+
+      try {
+        const response = await fetch(`${AIRPORT_API_BASE}/api/airports/search?term=${encodeURIComponent(term)}&limit=8`);
+        const data = await response.json();
+        const results = data.results || [];
+
+        suggestionsEl.innerHTML = results.map((airport) => `
+          <button class="suggestion" type="button" onclick='selectAirport("${target}", ${JSON.stringify(airport).replaceAll("'", "&apos;")})'>
+            <strong>${airport.city || airport.name} (${airport.code})</strong>
+            <span>${airport.name} · ${airport.country}</span>
+          </button>
+        `).join("") || '<div class="suggestion"><strong>No airport found</strong><span>Try city name or IATA code</span></div>';
+
+        suggestionsEl.classList.add("open");
+      } catch (error) {
+        suggestionsEl.classList.remove("open");
+        suggestionsEl.innerHTML = "";
+      }
+    }
+
+    window.selectAirport = function(target, airport) {
+      if (target === "from") {
+        selectedFromAirport = airport;
+      } else {
+        selectedToAirport = airport;
+      }
+
+      fromSuggestions.classList.remove("open");
+      toSuggestions.classList.remove("open");
+      renderAirportSelections();
+    };
+
+    let fromTimer = null;
+    let toTimer = null;
+
+    fromInput.addEventListener("input", () => {
+      if (fromInput.value !== lastFromInputValue) {
+        selectedFromAirport = null;
+        fromHint.textContent = "Select an airport from suggestions";
+      }
+
+      clearTimeout(fromTimer);
+      fromTimer = setTimeout(() => searchAirportSuggestions(fromInput.value, "from"), 180);
+    });
+
+    toInput.addEventListener("input", () => {
+      if (toInput.value !== lastToInputValue) {
+        selectedToAirport = null;
+        toHint.textContent = "Select an airport from suggestions";
+      }
+
+      clearTimeout(toTimer);
+      toTimer = setTimeout(() => searchAirportSuggestions(toInput.value, "to"), 180);
+    });
+
+    fromInput.addEventListener("focus", () => {
+      if (fromInput.value.trim().length >= 2) {
+        searchAirportSuggestions(fromInput.value, "from");
+      }
+    });
+
+    toInput.addEventListener("focus", () => {
+      if (toInput.value.trim().length >= 2) {
+        searchAirportSuggestions(toInput.value, "to");
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".field")) {
+        fromSuggestions.classList.remove("open");
+        toSuggestions.classList.remove("open");
+      }
+    });
+
+    document.querySelectorAll(".filter-input").forEach((input) => {
+      input.addEventListener("change", handleFilterChange);
+    });
+
+    individualFlightsTab.addEventListener("click", () => {
+      sortMode = "individual";
+      individualFlightsTab.classList.add("active-tab");
+      lowestFareTab.classList.remove("active-tab");
+      applyFiltersAndRender();
+    });
+
+    lowestFareTab.addEventListener("click", () => {
+      sortMode = "lowestFare";
+      lowestFareTab.classList.add("active-tab");
+      individualFlightsTab.classList.remove("active-tab");
+      applyFiltersAndRender();
+    });
+
+    renderAirportSelections();
+    setTripType("oneWay");
+
+    if (isInsideKissflowFormField()) {
+      kfWriteStatus.className = "kf-write-status ok";
+      kfWriteStatus.textContent = "Connected to Kissflow form field.";
+    }
+    forceResultsScrollHeight();
+    setTimeout(forceResultsScrollHeight, 250);
+  </script>
+</body>
+</html>
