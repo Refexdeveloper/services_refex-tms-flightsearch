@@ -38,6 +38,13 @@ app.use("/api/flights", flightsRouter);
 
 app.use((err, _req, res, _next) => {
   const status = err.status || 500;
+  console.error("request_failed", {
+    status,
+    message: err.message,
+    details: err.details || undefined,
+    causeCode: err.cause?.code,
+    causeMessage: err.cause?.message
+  });
   res.status(status).json({
     ok: false,
     error: err.message || "Internal server error",

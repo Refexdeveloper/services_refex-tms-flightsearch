@@ -127,26 +127,62 @@ async function getTravolutionConfig() {
   ]);
 
   return {
-    baseUrl: baseUrl.replace(/\/+$/, ""),
+    baseUrl: normalizeBaseUrl(baseUrl),
     userId,
     password,
     role: role || "A",
   };
 }
 
+function normalizeBaseUrl(value) {
+  const baseUrl = String(value || "").trim().replace(/\/+$/, "");
+  if (!/^https?:\/\//i.test(baseUrl)) {
+    throw new Error("TRAVOLUTION_BASE_URL must start with http:// or https://");
+  }
+  return baseUrl;
+}
+
+function describeFetchError(error, targetUrl) {
+  const cause = error?.cause;
+  const nested = Array.isArray(cause?.errors) ? cause.errors[0] : cause;
+  const code = nested?.code || cause?.code;
+  const reason = nested?.message || cause?.message || error?.message || "fetch failed";
+  const host = (() => {
+    try {
+      return new URL(targetUrl).host;
+    } catch {
+      return targetUrl;
+    }
+  })();
+
+  const enriched = new Error(
+    code
+      ? `Unable to reach Travolution (${host}): ${reason} [${code}]`
+      : `Unable to reach Travolution (${host}): ${reason}`,
+  );
+  enriched.status = 502;
+  enriched.details = {
+    provider: "travolution",
+    targetUrl,
+    code,
+    reason,
+  };
+  return enriched;
+}
+
 async function getConfigValue(directEnvName, secretEnvName, defaultValue) {
   const directValue = process.env[directEnvName];
   if (directValue) {
-    return directValue;
+    return String(directValue).trim();
   }
 
   const secretName = process.env[secretEnvName];
   if (secretName) {
-    return getSecretValue(secretName);
+    return String(await getSecretValue(secretName)).trim();
   }
 
   if (defaultValue !== undefined) {
-    return defaultValue;
+    return String(defaultValue).trim();
   }
 
   throw new Error(`${directEnvName} or ${secretEnvName} is required`);
@@ -165,19 +201,25 @@ async function getValidSession(config) {
 }
 
 async function login(config) {
-  const response = await fetch(`${config.baseUrl}/restwebsvc/auth/loginV1`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      AuthType: "WBS",
-      IsMobile: "N",
-      Password: config.password,
-      Role: config.role,
-      UserId: config.userId,
-    }),
-  });
+  const loginUrl = `${config.baseUrl}/restwebsvc/auth/loginV1`;
+  let response;
+  try {
+    response = await fetch(loginUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        AuthType: "WBS",
+        IsMobile: "N",
+        Password: config.password,
+        Role: config.role,
+        UserId: config.userId,
+      }),
+    });
+  } catch (error) {
+    throw describeFetchError(error, loginUrl);
+  }
 
   const data = await readJsonResponse(response);
 
@@ -217,14 +259,20 @@ async function login(config) {
 }
 
 async function postTravolutionSearch(config, session, searchRequest) {
-  const response = await fetch(`${config.baseUrl}/restwebsvc/air/searchV1`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Cookie: session.cookieHeader,
-    },
-    body: JSON.stringify(searchRequest),
-  });
+  const searchUrl = `${config.baseUrl}/restwebsvc/air/searchV1`;
+  let response;
+  try {
+    response = await fetch(searchUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: session.cookieHeader,
+      },
+      body: JSON.stringify(searchRequest),
+    });
+  } catch (error) {
+    throw describeFetchError(error, searchUrl);
+  }
 
   const data = await readJsonResponse(response);
   const shouldRetrySession =

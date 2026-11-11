@@ -19,7 +19,7 @@ export async function getSecretValue(secretName) {
 
   const resourceName = `projects/${projectId}/secrets/${secretName}/versions/latest`;
   const [version] = await client.accessSecretVersion({ name: resourceName });
-  const value = version.payload?.data?.toString("utf8");
+  const value = version.payload?.data?.toString("utf8")?.trim();
 
   if (!value) {
     throw new Error(`Secret ${secretName} returned empty value`);
